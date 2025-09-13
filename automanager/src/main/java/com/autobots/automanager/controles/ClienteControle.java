@@ -44,7 +44,7 @@ public class ClienteControle {
 
 	@PutMapping("/atualizar")
 	public void atualizarCliente(@RequestBody Cliente atualizacao) {
-		Cliente cliente = repositorio.getById(atualizacao.getId());
+		Cliente cliente = repositorio.findById(atualizacao.getId()).get();
 		ClienteAtualizador atualizador = new ClienteAtualizador();
 		atualizador.atualizar(cliente, atualizacao);
 		repositorio.save(cliente);
@@ -52,7 +52,7 @@ public class ClienteControle {
 
 	@DeleteMapping("/excluir")
 	public void excluirCliente(@RequestBody Cliente exclusao) {
-		Cliente cliente = repositorio.getById(exclusao.getId());
+		Cliente cliente = repositorio.findById(exclusao.getId()).get();
 		repositorio.delete(cliente);
 	}
 }
