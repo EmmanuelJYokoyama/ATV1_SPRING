@@ -3,6 +3,8 @@ package com.autobots.automanager.controles;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,39 +22,55 @@ import com.autobots.automanager.repositorios.ClienteRepositorio;
 @RestController
 @RequestMapping("/cliente")
 public class ClienteControle {
-	@Autowired
-	private ClienteRepositorio repositorio;
-	@Autowired
-	private ClienteSelecionador selecionador;
+    @Autowired
+    private ClienteRepositorio repositorio;
+    @Autowired
+    private ClienteSelecionador selecionador;
 
-	@GetMapping("/cliente/{id}")
-	public Cliente obterCliente(@PathVariable long id) {
-		List<Cliente> clientes = repositorio.findAll();
-		return selecionador.selecionar(clientes, id);
-	}
+    @GetMapping("/{id}")
+    public ResponseEntity<?> obterCliente(@PathVariable long id) {
+        List<Cliente> clientes = repositorio.findAll();
+        Cliente cliente = selecionador.selecionar(clientes, id);
+        if (cliente != null) {
+            return ResponseEntity.ok(cliente);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Cliente não encontrado.");
+        }
+    }
 
-	@GetMapping("/clientes")
-	public List<Cliente> obterClientes() {
-		List<Cliente> clientes = repositorio.findAll();
-		return clientes;
-	}
+    @GetMapping("/clientes")
+    public ResponseEntity<?> obterClientes() {
+        List<Cliente> clientes = repositorio.findAll();
+        return ResponseEntity.ok(clientes);
+    }
 
-	@PostMapping("/cadastro")
-	public void cadastrarCliente(@RequestBody Cliente cliente) {
-		repositorio.save(cliente);
-	}
+    @PostMapping("/cadastro")
+    public ResponseEntity<String> cadastrarCliente(@RequestBody Cliente cliente) {
+        repositorio.save(cliente);
+        return ResponseEntity.status(HttpStatus.CREATED).body("Cliente cadastrado com sucesso.");
+    }
 
-	@PutMapping("/atualizar")
-	public void atualizarCliente(@RequestBody Cliente atualizacao) {
-		Cliente cliente = repositorio.findById(atualizacao.getId()).get();
-		ClienteAtualizador atualizador = new ClienteAtualizador();
-		atualizador.atualizar(cliente, atualizacao);
-		repositorio.save(cliente);
-	}
+    @PutMapping("/atualizar")
+    public ResponseEntity<String> atualizarCliente(@RequestBody Cliente atualizacao) {
+        if (repositorio.existsById(atualizacao.getId())) {
+            Cliente cliente = repositorio.findById(atualizacao.getId()).get();
+            ClienteAtualizador atualizador = new ClienteAtualizador();
+            atualizador.atualizar(cliente, atualizacao);
+            repositorio.save(cliente);
+            return ResponseEntity.ok("Cliente atualizado com sucesso.");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Cliente não encontrado.");
+        }
+    }
 
-	@DeleteMapping("/excluir")
-	public void excluirCliente(@RequestBody Cliente exclusao) {
-		Cliente cliente = repositorio.findById(exclusao.getId()).get();
-		repositorio.delete(cliente);
-	}
+    @DeleteMapping("/excluir")
+    public ResponseEntity<String> excluirCliente(@RequestBody Cliente exclusao) {
+        if (repositorio.existsById(exclusao.getId())) {
+            Cliente cliente = repositorio.findById(exclusao.getId()).get();
+            repositorio.delete(cliente);
+            return ResponseEntity.ok("Cliente excluído com sucesso.");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Cliente não encontrado.");
+        }
+    }
 }
